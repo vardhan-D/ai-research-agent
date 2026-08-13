@@ -2,7 +2,6 @@ from llm import LLM
 from prompts import SYSTEM_PROMPT
 from tools import TOOLS, TOOL_MAP
 
-
 class Agent:
 
     def __init__(self):

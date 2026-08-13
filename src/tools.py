@@ -90,39 +90,85 @@ def read_webpage(url: str):
         "content": text[:12000],
     }
 
-if __name__ == "__main__":
+def research_web(query: str):
+    """
+    Search the web, read multiple sources, and return
+    the useful research content.
+    """
 
-    results = search_web(
-        "latest developments in humanoid robots"
-    )
+    # Step 1: Search the web
+    results = search_web(query)
 
-    print("\nSearch Results:\n")
+    if not results:
+        return {
+            "query": query,
+            "sources": [],
+            "message": "No search results found."
+        }
 
-    for i, result in enumerate(results):
-        print(f"{i + 1}. {result['title']}")
-        print(f"   {result['url']}")
-        print()
+    research = []
 
-    if results:
+    # Step 2: Read each search result
+    for result in results:
 
-        print("\nReading first result...\n")
+        print(f"\n[Research] Reading: {result['title']}")
 
-        content = read_webpage(
-            results[1]["url"]
-        )
+        try:
+            page = read_webpage(result["url"])
 
-        if content["success"]:
-            print(content["content"][:3000])
-        else:
-            print("Failed to read webpage:")
-            print(content["error"])
+            # Website could not be read
+            if not page.get("success"):
+                print(
+                    f"[Research] Skipping failed source: "
+                    f"{result['url']}"
+                )
+                continue
+
+            content = page.get("content", "")
+
+            # Ignore empty pages
+            if not content.strip():
+                print(
+                    f"[Research] Skipping empty source: "
+                    f"{result['url']}"
+                )
+                continue
+
+            research.append(
+                {
+                    "title": result["title"],
+                    "url": result["url"],
+                    "content": content,
+                }
+            )
+
+            print("[Research] Source collected successfully.")
+
+        except Exception as e:
+
+            print(
+                f"[Research] Error reading source: {e}"
+            )
+
+            # Continue with the next source
+            continue
+
+    # Step 3: Return everything we successfully collected
+    return {
+        "query": query,
+        "sources": research,
+        "source_count": len(research),
+    }
 
 TOOLS = [
     search_web,
     read_webpage,
+    research_web,
 ]
 
 TOOL_MAP = {
     "search_web": search_web,
     "read_webpage": read_webpage,
+    "research_web": research_web,
 }
+
