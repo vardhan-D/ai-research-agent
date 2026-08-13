@@ -52,3 +52,11 @@ if __name__ == "__main__":
         print("URL:", result["url"])
         print("Content:", result["content"])
         print("-" * 80)
+
+TOOLS = [
+    search_web
+]
+
+TOOL_MAP = {
+    "search_web": search_web
+}

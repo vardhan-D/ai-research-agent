@@ -1,6 +1,6 @@
 from ollama import Client
 from prompts import SYSTEM_PROMPT
-
+from tools import TOOLS
 
 class LLM:
     def __init__(self):
@@ -11,7 +11,7 @@ class LLM:
         response = self.client.chat(
             model=self.model,
             messages=messages,
-            tools=tools or [],
+            tools=TOOLS
         )
 
         return response

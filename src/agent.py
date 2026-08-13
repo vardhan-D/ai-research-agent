@@ -1,10 +1,6 @@
 from llm import LLM
-from tools import add_strings
 from prompts import SYSTEM_PROMPT
-
-TOOLS = {
-    "add_strings": add_strings,
-}
+from tools import TOOLS, TOOL_MAP
 
 
 class Agent:
@@ -29,7 +25,7 @@ class Agent:
 
             response = self.llm.chat(
                 messages=messages,
-                tools=list(TOOLS.values()),
+                tools=TOOLS
             )
 
             # Save the assistant's response
@@ -45,19 +41,24 @@ class Agent:
                 tool_name = tool_call.function.name
                 arguments = tool_call.function.arguments
 
-                tool_function = TOOLS.get(tool_name)
+                print(f"\n[Agent] Tool requested: {tool_name}")
+                print(f"[Agent] Arguments: {arguments}")
+
+                tool_function = TOOL_MAP.get(tool_name)
 
                 if tool_function is None:
                     raise ValueError(
                         f"Unknown tool requested: {tool_name}"
                     )
 
+                # Python actually executes the function here
                 result = tool_function(**arguments)
 
                 print(
-                    f"[Tool] {tool_name}({arguments}) -> {result}"
+                    f"[Tool Result] {result}"
                 )
 
+                # Give the tool result back to the LLM
                 messages.append(
                     {
                         "role": "tool",

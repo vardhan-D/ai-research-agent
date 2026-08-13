@@ -3,7 +3,7 @@ from agent import Agent
 
 agent = Agent()
 
-prompt = input("Combine 'Artificial' and 'Intelligence' to form a new word.")
+prompt = input("Ask the research agent: ")
 
 response = agent.run(prompt)
 
