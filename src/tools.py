@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 
 from state import ResearchState
 
-
 # --------------------------------------------------
 # Configuration
 # --------------------------------------------------
@@ -271,40 +270,70 @@ def research_web(
 
 def synthesize_research(state: ResearchState):
     """
-    Combine the collected sources into a research context
-    that can be analyzed by the LLM.
+    Analyze the collected research sources using the LLM
+    and store the findings in ResearchState.
     """
 
     if not state.sources_read:
         return {
             "success": False,
-            "message": "No sources were successfully read."
+            "message": "No sources available for synthesis."
         }
 
-    research_context = []
+    research_context = ""
 
-    for source in state.sources_read:
+    for i, source in enumerate(state.sources_read, 1):
 
-        research_context.append(
-            f"""
-SOURCE:
+        research_context += f"""
+SOURCE {i}
+
+Title:
 {source['title']}
 
 URL:
 {source['url']}
 
-CONTENT:
-{source['content']}
-"""
-        )
+Content:
+{source['content'][:6000]}
 
-    context = "\n\n".join(research_context)
+----------------------------------------
+"""
+
+    prompt = f"""
+You are a research analyst.
+
+Research question:
+{state.query}
+
+Analyze the following sources:
+
+{research_context}
+
+Extract the most important findings.
+
+Rules:
+1. Use only information supported by the sources.
+2. Do not invent facts.
+3. Remove irrelevant information.
+4. Combine duplicate findings.
+5. Highlight important developments and trends.
+6. Mention the source number for each finding.
+
+Return only the findings as a numbered list.
+"""
+
+    llm = LLM()
+
+    response = llm.generate_text(prompt)
+
+    state.findings = [
+        response
+    ]
 
     return {
         "success": True,
         "query": state.query,
-        "source_count": len(state.sources_read),
-        "research_context": context,
+        "findings": state.findings,
     }
 
 # ==================================================
