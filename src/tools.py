@@ -1,23 +1,34 @@
 import os
 import requests
+
 from dotenv import load_dotenv
 from tavily import TavilyClient
 from bs4 import BeautifulSoup
 
+from state import ResearchState
+
+
+# --------------------------------------------------
+# Configuration
+# --------------------------------------------------
+
 load_dotenv()
 
 api_key = os.getenv("TAVILY_API_KEY")
-
-
-
 
 tavily_client = TavilyClient(
     api_key=api_key
 )
 
 
+# --------------------------------------------------
+# SEARCH WEB
+# --------------------------------------------------
+
 def search_web(query: str):
-    """Search the web and return relevant search results."""
+    """
+    Search the web and return relevant search results.
+    """
 
     response = tavily_client.search(
         query=query,
@@ -38,8 +49,15 @@ def search_web(query: str):
 
     return results
 
+
+# --------------------------------------------------
+# READ WEBPAGE
+# --------------------------------------------------
+
 def read_webpage(url: str):
-    """Fetch a webpage and return its readable text."""
+    """
+    Fetch a webpage and return its readable text.
+    """
 
     headers = {
         "User-Agent": (
@@ -50,6 +68,7 @@ def read_webpage(url: str):
     }
 
     try:
+
         response = requests.get(
             url,
             headers=headers,
@@ -59,6 +78,7 @@ def read_webpage(url: str):
         response.raise_for_status()
 
     except requests.exceptions.Timeout:
+
         return {
             "success": False,
             "error": "The webpage took too long to respond.",
@@ -66,16 +86,28 @@ def read_webpage(url: str):
         }
 
     except requests.exceptions.RequestException as e:
+
         return {
             "success": False,
             "error": f"Could not access webpage: {str(e)}",
             "url": url,
         }
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(
+        response.text,
+        "html.parser"
+    )
 
+    # Remove unnecessary elements
     for element in soup(
-        ["script", "style", "nav", "footer", "header", "aside"]
+        [
+            "script",
+            "style",
+            "nav",
+            "footer",
+            "header",
+            "aside",
+        ]
     ):
         element.decompose()
 
@@ -90,59 +122,125 @@ def read_webpage(url: str):
         "content": text[:12000],
     }
 
-def research_web(query: str):
+
+# --------------------------------------------------
+# RESEARCH WEB
+# --------------------------------------------------
+
+def research_web(
+    query: str,
+    state: ResearchState
+):
     """
-    Search the web, read multiple sources, and return
-    the useful research content.
+    Search the web, read multiple sources,
+    and update the research state.
     """
 
-    # Step 1: Search the web
+    print(
+        f"\n[Research] Starting research for: {query}"
+    )
+
+    # Save query in state
+    state.query = query
+
+    # --------------------------------------------------
+    # STEP 1: SEARCH
+    # --------------------------------------------------
+
     results = search_web(query)
 
+    # Store search results
+    state.search_results = results
+
     if not results:
+
         return {
             "query": query,
             "sources": [],
-            "message": "No search results found."
+            "message": "No search results found.",
         }
 
     research = []
 
-    # Step 2: Read each search result
+    # --------------------------------------------------
+    # STEP 2: READ SOURCES
+    # --------------------------------------------------
+
     for result in results:
 
-        print(f"\n[Research] Reading: {result['title']}")
+        url = result["url"]
+        title = result["title"]
+
+        print(
+            f"\n[Research] Reading: {title}"
+        )
 
         try:
-            page = read_webpage(result["url"])
 
-            # Website could not be read
+            page = read_webpage(url)
+
+            # ------------------------------------------
+            # Failed webpage
+            # ------------------------------------------
+
             if not page.get("success"):
+
                 print(
-                    f"[Research] Skipping failed source: "
-                    f"{result['url']}"
+                    f"[Research] Failed: {url}"
                 )
+
+                state.failed_sources.append(
+                    {
+                        "title": title,
+                        "url": url,
+                        "reason": page.get(
+                            "error",
+                            "Unknown error",
+                        ),
+                    }
+                )
+
                 continue
 
-            content = page.get("content", "")
+            # ------------------------------------------
+            # Extract content
+            # ------------------------------------------
 
-            # Ignore empty pages
-            if not content.strip():
-                print(
-                    f"[Research] Skipping empty source: "
-                    f"{result['url']}"
-                )
-                continue
-
-            research.append(
-                {
-                    "title": result["title"],
-                    "url": result["url"],
-                    "content": content,
-                }
+            content = page.get(
+                "content",
+                ""
             )
 
-            print("[Research] Source collected successfully.")
+            if not content.strip():
+
+                state.failed_sources.append(
+                    {
+                        "title": title,
+                        "url": url,
+                        "reason": "Empty webpage",
+                    }
+                )
+
+                continue
+
+            # ------------------------------------------
+            # Successful source
+            # ------------------------------------------
+
+            source = {
+                "title": title,
+                "url": url,
+                "content": content,
+            }
+
+            research.append(source)
+
+            # Save source to state
+            state.sources_read.append(source)
+
+            print(
+                "[Research] Source collected successfully."
+            )
 
         except Exception as e:
 
@@ -150,25 +248,188 @@ def research_web(query: str):
                 f"[Research] Error reading source: {e}"
             )
 
-            # Continue with the next source
-            continue
+            state.failed_sources.append(
+                {
+                    "title": title,
+                    "url": url,
+                    "reason": str(e),
+                }
+            )
 
-    # Step 3: Return everything we successfully collected
+    # --------------------------------------------------
+    # RETURN RESEARCH DATA
+    # --------------------------------------------------
+
     return {
         "query": query,
         "sources": research,
         "source_count": len(research),
+        "failed_source_count": len(
+            state.failed_sources
+        ),
     }
 
+def synthesize_research(state: ResearchState):
+    """
+    Combine the collected sources into a research context
+    that can be analyzed by the LLM.
+    """
+
+    if not state.sources_read:
+        return {
+            "success": False,
+            "message": "No sources were successfully read."
+        }
+
+    research_context = []
+
+    for source in state.sources_read:
+
+        research_context.append(
+            f"""
+SOURCE:
+{source['title']}
+
+URL:
+{source['url']}
+
+CONTENT:
+{source['content']}
+"""
+        )
+
+    context = "\n\n".join(research_context)
+
+    return {
+        "success": True,
+        "query": state.query,
+        "source_count": len(state.sources_read),
+        "research_context": context,
+    }
+
+# ==================================================
+# LLM TOOL SCHEMAS
+# ==================================================
+#
+# IMPORTANT:
+#
+# These are NOT the Python functions.
+#
+# These are the descriptions/schema that the LLM
+# is allowed to see.
+#
+# Notice that "state" is NOT included anywhere.
+# ==================================================
+
 TOOLS = [
-    search_web,
-    read_webpage,
-    research_web,
+
+    {
+        "type": "function",
+        "function": {
+            "name": "search_web",
+            "description": (
+                "Search the web for relevant information "
+                "and return search results."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": (
+                            "The search query to use."
+                        ),
+                    },
+                },
+                "required": [
+                    "query"
+                ],
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "read_webpage",
+            "description": (
+                "Read the contents of a webpage "
+                "using its URL."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": (
+                            "The URL of the webpage to read."
+                        ),
+                    },
+                },
+                "required": [
+                    "url"
+                ],
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "research_web",
+            "description": (
+                "Perform web research on a topic. "
+                "Search multiple sources, read the sources, "
+                "and collect the relevant information."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": (
+                            "The research question or topic."
+                        ),
+                    },
+                },
+                "required": [
+                    "query"
+                ],
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "synthesize_research",
+            "description": (
+                "Combine the collected research sources "
+                "into a structured research context for analysis."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+
 ]
 
-TOOL_MAP = {
-    "search_web": search_web,
-    "read_webpage": read_webpage,
-    "research_web": research_web,
-}
 
+# ==================================================
+# PYTHON TOOL MAP
+# ==================================================
+
+TOOL_MAP = {
+
+    "search_web": search_web,
+
+    "read_webpage": read_webpage,
+
+    "research_web": research_web,
+
+    "synthesize_research": synthesize_research,
+
+}
