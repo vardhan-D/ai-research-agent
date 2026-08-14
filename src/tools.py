@@ -266,12 +266,17 @@ def research_web(
         "failed_source_count": len(
             state.failed_sources
         ),
+        "message": (
+        "Research completed successfully. "
+        "Use the collected sources to synthesize "
+        "the final answer."
+        ),
     }
 
 def synthesize_research(state: ResearchState):
     """
-    Analyze the collected research sources using the LLM
-    and store the findings in ResearchState.
+    Analyze the sources collected in ResearchState
+    and extract the important findings.
     """
 
     if not state.sources_read:
@@ -283,15 +288,10 @@ def synthesize_research(state: ResearchState):
     research_context = ""
 
     for i, source in enumerate(state.sources_read, 1):
-
         research_context += f"""
 SOURCE {i}
-
-Title:
-{source['title']}
-
-URL:
-{source['url']}
+Title: {source['title']}
+URL: {source['url']}
 
 Content:
 {source['content'][:6000]}
@@ -305,35 +305,28 @@ You are a research analyst.
 Research question:
 {state.query}
 
-Analyze the following sources:
+Below are sources collected from the web.
 
 {research_context}
 
-Extract the most important findings.
+Analyze these sources and extract the important findings.
 
 Rules:
-1. Use only information supported by the sources.
-2. Do not invent facts.
-3. Remove irrelevant information.
-4. Combine duplicate findings.
-5. Highlight important developments and trends.
-6. Mention the source number for each finding.
+- Only use information supported by the sources.
+- Do not invent facts.
+- Remove irrelevant information.
+- Combine overlapping findings.
+- Identify important developments, trends, facts, or conclusions.
+- Mention the source number supporting each finding.
 
-Return only the findings as a numbered list.
+Return the findings as a numbered list.
 """
-
-    llm = LLM()
-
-    response = llm.generate_text(prompt)
-
-    state.findings = [
-        response
-    ]
 
     return {
         "success": True,
         "query": state.query,
-        "findings": state.findings,
+        "research_context": research_context,
+        "instruction": prompt,
     }
 
 # ==================================================
