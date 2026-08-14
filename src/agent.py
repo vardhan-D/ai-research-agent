@@ -131,7 +131,12 @@ class Agent:
                 # The agent injects it here.
                 # --------------------------------------------------
 
-                if tool_name in ["research_web", "synthesize_research"]:
+                if tool_name in [
+                    "research_web",
+                    "validate_sources",
+                    "synthesize_research",
+                    "generate_report",
+                ]:
 
                     result = tool_function(
                         state=self.state,

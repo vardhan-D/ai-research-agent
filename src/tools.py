@@ -329,6 +329,98 @@ Return the findings as a numbered list.
         "instruction": prompt,
     }
 
+def validate_sources(state: ResearchState):
+    """
+    Validate the sources collected during research.
+    """
+
+    valid_sources = []
+    rejected_sources = []
+
+    for source in state.sources_read:
+
+        title = source.get("title", "")
+        url = source.get("url", "")
+        content = source.get("content", "")
+
+        # Basic validation
+        if not title.strip():
+            rejected_sources.append({
+                "url": url,
+                "reason": "Missing title"
+            })
+            continue
+
+        if not url.startswith("http"):
+            rejected_sources.append({
+                "title": title,
+                "reason": "Invalid URL"
+            })
+            continue
+
+        if len(content.strip()) < 200:
+            rejected_sources.append({
+                "title": title,
+                "url": url,
+                "reason": "Insufficient content"
+            })
+            continue
+
+        valid_sources.append(source)
+
+    return {
+        "success": True,
+        "valid_sources": valid_sources,
+        "rejected_sources": rejected_sources,
+        "valid_count": len(valid_sources),
+        "rejected_count": len(rejected_sources),
+    }
+
+def generate_report(state: ResearchState):
+    """
+    Generate a structured final research report
+    from the validated research findings.
+    """
+
+    if not state.findings:
+        return {
+            "success": False,
+            "message": "No research findings available."
+        }
+
+    findings_text = "\n\n".join(
+        str(finding)
+        for finding in state.findings
+    )
+
+    sources_text = "\n".join(
+        f"- {source['title']} — {source['url']}"
+        for source in state.sources_read
+    )
+
+    report = f"""
+# Research Report
+
+## Research Question
+
+{state.query}
+
+## Key Findings
+
+{findings_text}
+
+## Sources
+
+{sources_text}
+""".strip()
+
+    state.final_report = report
+
+    return {
+        "success": True,
+        "report": report,
+    }
+
 # ==================================================
 # LLM TOOL SCHEMAS
 # ==================================================
@@ -436,6 +528,39 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "validate_sources",
+            "description": (
+                "Validate the sources collected during research. "
+                "Check whether the sources contain valid URLs, "
+                "meaningful content, and sufficient information."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_report",
+            "description": (
+                "Generate a structured research report "
+                "using the findings and sources collected "
+                "during the research process."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
 
 ]
 
@@ -454,4 +579,7 @@ TOOL_MAP = {
 
     "synthesize_research": synthesize_research,
 
+    "validate_sources": validate_sources,
+
+    "generate_report": generate_report,
 }
