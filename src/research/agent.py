@@ -1,4 +1,5 @@
-from graph import build_graph
+from .graph import build_graph
+from .state import ResearchState
 
 
 class Agent:
@@ -45,10 +46,52 @@ class Agent:
         # Run graph
         # ------------------------------------------
 
-        self.state = (
-            self.graph.invoke(
-                state
-            )
+        final_state = self.graph.invoke(
+            state
+        )
+
+
+        # ------------------------------------------
+        # Convert LangGraph dict
+        # back to ResearchState
+        # ------------------------------------------
+
+        self.state = ResearchState(
+
+            query=final_state.get(
+                "query",
+                ""
+            ),
+
+            search_results=final_state.get(
+                "search_results",
+                []
+            ),
+
+            sources_read=final_state.get(
+                "sources_read",
+                []
+            ),
+
+            failed_sources=final_state.get(
+                "failed_sources",
+                []
+            ),
+
+            findings=final_state.get(
+                "findings",
+                []
+            ),
+
+            gaps=final_state.get(
+                "gaps",
+                []
+            ),
+
+            final_report=final_state.get(
+                "final_report",
+                ""
+            ),
         )
 
 
@@ -56,6 +99,4 @@ class Agent:
         # Return final answer
         # ------------------------------------------
 
-        return self.state[
-            "final_report"
-        ]
+        return self.state.final_report

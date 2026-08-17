@@ -1,7 +1,10 @@
-from llm import ScriptLLM
-from state import ScriptState
-from prompts import SCRIPT_SYSTEM_PROMPT,SCRIPT_PROMPT
-from tools import format_sources
+from .llm import ScriptLLM
+from .state import ScriptState
+from .prompts import (
+    SCRIPT_SYSTEM_PROMPT,
+    SCRIPT_PROMPT,
+)
+from .tools import format_sources
 
 
 class ScriptAgent:
@@ -95,3 +98,35 @@ class ScriptAgent:
 
 
         return self.state
+
+
+    # ==========================================
+    # RUN FROM RESEARCH AGENT
+    # ==========================================
+
+    def run_from_research(
+        self,
+        research_state
+    ):
+
+        topic = research_state.query
+
+        findings = research_state.findings
+
+        
+
+
+        research_text = "\n\n".join(
+            str(finding)
+            for finding in findings
+        )
+
+
+        return self.run(
+
+            topic=topic,
+
+            research=research_text,
+
+            sources=[],
+        )

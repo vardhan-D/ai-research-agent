@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from tavily import TavilyClient
 from bs4 import BeautifulSoup
 
-from state import ResearchState
+from .state import ResearchState
 
 # --------------------------------------------------
 # Configuration

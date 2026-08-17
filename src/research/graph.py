@@ -3,16 +3,16 @@ import json
 
 from langgraph.graph import StateGraph, START, END
 
-from state import ResearchState
+from .state import ResearchState
 
-from tools import (
+from .tools import (
     research_web,
     validate_sources,
     synthesize_research,
     generate_report,
 )
 
-from llm import LLM
+from .llm import LLM
 
 
 # ==================================================

@@ -1,6 +1,6 @@
 from ollama import Client
 
-from tools import TOOLS
+from .tools import TOOLS
 
 
 class LLM:

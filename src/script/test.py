@@ -1,4 +1,4 @@
-from agent import ScriptAgent
+from .agent import ScriptAgent
 
 
 agent = ScriptAgent()
