@@ -82,5 +82,40 @@ print("==============================\n")
 
 
 print(
-    storyboard_state.final_storyboard
+    f"\nScenes generated: "
+    f"{len(storyboard_state.scenes)}"
 )
+
+
+for scene in storyboard_state.scenes:
+
+    print("\n--------------------------")
+
+    print(
+        f"SCENE {scene['scene_number']}"
+    )
+
+    print(
+        f"NARRATION: "
+        f"{scene['narration']}"
+    )
+
+    print(
+        f"VISUAL: "
+        f"{scene['visual']}"
+    )
+
+    print(
+        f"PROMPT: "
+        f"{scene['generation_prompt']}"
+    )
+
+    print(
+        f"DURATION: "
+        f"{scene['duration']} seconds"
+    )
+
+    print(
+        f"TRANSITION: "
+        f"{scene['transition']}"
+    )

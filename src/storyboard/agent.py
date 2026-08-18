@@ -1,3 +1,5 @@
+import json
+
 from .llm import StoryboardLLM
 from .state import StoryboardState
 
@@ -53,7 +55,7 @@ class StoryboardAgent:
         )
 
 
-        storyboard = self.llm.generate(
+        response = self.llm.generate(
 
             system_prompt=
                 STORYBOARD_SYSTEM_PROMPT,
@@ -65,16 +67,49 @@ class StoryboardAgent:
 
 
         # ------------------------------------------
-        # SAVE OUTPUT
+        # SAVE RAW RESPONSE
         # ------------------------------------------
 
-        self.state.final_storyboard = storyboard
+        self.state.final_storyboard = response
 
 
-        print(
-            "[Storyboard Agent] "
-            "Storyboard generated."
-        )
+        # ------------------------------------------
+        # PARSE JSON
+        # ------------------------------------------
+
+        try:
+
+            storyboard_data = json.loads(
+                response
+            )
+
+            self.state.scenes = (
+                storyboard_data.get(
+                    "scenes",
+                    []
+                )
+            )
+
+
+            print(
+                f"[Storyboard Agent] "
+                f"Storyboard generated with "
+                f"{len(self.state.scenes)} scenes."
+            )
+
+
+        except json.JSONDecodeError as e:
+
+            print(
+                "[Storyboard Agent] "
+                "Failed to parse storyboard JSON."
+            )
+
+            print(
+                f"[Storyboard Agent] Error: {e}"
+            )
+
+            self.state.scenes = []
 
 
         return self.state
