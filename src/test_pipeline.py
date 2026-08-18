@@ -1,7 +1,8 @@
 from research.agent import Agent
 from script.agent import ScriptAgent
 from storyboard.agent import StoryboardAgent
-
+from voice.agent import VoiceAgent
+from media.agent import MediaAgent
 # ------------------------------------------
 # RESEARCH
 # ------------------------------------------
@@ -117,5 +118,44 @@ for scene in storyboard_state.scenes:
 
     print(
         f"TRANSITION: "
-        f"{scene['transition']}"
+        f"{scene.get('transition', 'cut')}"
     )
+
+# ------------------------------------------
+# VOICE
+# ------------------------------------------
+
+voice_agent = VoiceAgent()
+
+
+print("\n==============================")
+print("STARTING VOICE GENERATION")
+print("==============================")
+
+
+voice_state = voice_agent.run(
+    scenes=storyboard_state.scenes
+)
+
+
+print("\n==============================")
+print("VOICE GENERATION COMPLETE")
+print("==============================\n")
+
+
+for audio in voice_state.audio_files:
+
+    print(
+        f"Scene {audio['scene_number']}: "
+        f"{audio['audio_file']}"
+    )
+
+media_agent = MediaAgent()
+
+print("\n==============================")
+print("STARTING MEDIA GENERATION")
+print("==============================")
+
+media_state = media_agent.run(
+    storyboard_state.scenes[:3]
+)

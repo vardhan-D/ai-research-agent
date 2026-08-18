@@ -90,6 +90,16 @@ class StoryboardAgent:
                 )
             )
 
+            # ------------------------------------------
+            # NORMALIZE SCENE DATA
+            # ------------------------------------------
+
+            for scene in self.state.scenes:
+
+                scene.setdefault(
+                    "transition",
+                    "cut"
+                )
 
             print(
                 f"[Storyboard Agent] "
