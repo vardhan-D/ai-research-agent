@@ -1,6 +1,6 @@
 from research.agent import Agent
 from script.agent import ScriptAgent
-
+from storyboard.agent import StoryboardAgent
 
 # ------------------------------------------
 # RESEARCH
@@ -55,4 +55,32 @@ print("==============================\n")
 
 print(
     script_state.final_script
+)
+
+# ------------------------------------------
+# STORYBOARD
+# ------------------------------------------
+
+storyboard_agent = StoryboardAgent()
+
+
+print("\n==============================")
+print("STARTING STORYBOARD GENERATION")
+print("==============================")
+
+
+storyboard_state = storyboard_agent.run(
+
+    script=script_state.final_script
+
+)
+
+
+print("\n==============================")
+print("FINAL STORYBOARD")
+print("==============================\n")
+
+
+print(
+    storyboard_state.final_storyboard
 )
