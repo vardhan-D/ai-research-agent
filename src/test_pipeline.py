@@ -121,6 +121,31 @@ for scene in storyboard_state.scenes:
         f"{scene.get('transition', 'cut')}"
     )
 
+if not storyboard_state.scenes:
+
+    print(
+        "\n=============================="
+    )
+
+    print(
+        "PIPELINE STOPPED"
+    )
+
+    print(
+        "=============================="
+    )
+
+    print(
+        "Storyboard produced 0 scenes."
+    )
+
+    print(
+        "Voice and Media agents "
+        "will not be executed."
+    )
+
+    raise SystemExit
+
 # ------------------------------------------
 # VOICE
 # ------------------------------------------

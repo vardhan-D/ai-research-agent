@@ -1,8 +1,10 @@
 import os
+import time
+import base64
 
 import requests
 from dotenv import load_dotenv
-import base64
+
 
 load_dotenv()
 
@@ -14,7 +16,8 @@ MODEL = "@cf/black-forest-labs/flux-2-klein-4b"
 
 def generate_image(
     prompt: str,
-    scene_number: int
+    scene_number: int,
+    max_retries: int = 3,
 ):
 
     # ------------------------------------------
@@ -25,6 +28,36 @@ def generate_image(
         OUTPUT_DIR,
         exist_ok=True
     )
+
+
+    # ------------------------------------------
+    # CREATE OUTPUT FILE PATH
+    # ------------------------------------------
+
+    output_file = os.path.join(
+
+        OUTPUT_DIR,
+
+        f"scene_{scene_number:03d}.png"
+
+    )
+
+
+    # ------------------------------------------
+    # SKIP IF IMAGE ALREADY EXISTS
+    # ------------------------------------------
+
+    if os.path.exists(
+        output_file
+    ):
+
+        print(
+            f"[Media Tool] "
+            f"Scene {scene_number} "
+            f"already exists. Skipping."
+        )
+
+        return output_file
 
 
     # ------------------------------------------
@@ -95,119 +128,163 @@ def generate_image(
     }
 
 
-    print(
-        f"[Media Tool] "
-        f"Requesting image for "
-        f"scene {scene_number}..."
-    )
-
-
     # ------------------------------------------
-    # CALL CLOUDFLARE
+    # RETRY LOOP
     # ------------------------------------------
 
-    response = requests.post(
+    for attempt in range(
+        1,
+        max_retries + 1
+    ):
 
-        url,
+        try:
 
-        headers=headers,
-
-        files={
-            key: (
-                None,
-                value
+            print(
+                f"[Media Tool] "
+                f"Requesting image for "
+                f"scene {scene_number} "
+                f"(attempt {attempt}/"
+                f"{max_retries})..."
             )
-            for key, value
-            in data.items()
-        },
-
-        timeout=120
-
-    )
 
 
-    # ------------------------------------------
-    # CHECK FOR ERRORS
-    # ------------------------------------------
+            response = requests.post(
 
-    if not response.ok:
+                url,
 
-        print(
-            "[Media Tool] "
-            "Cloudflare request failed."
-        )
+                headers=headers,
 
-        print(
-            f"Status code: "
-            f"{response.status_code}"
-        )
+                files={
+                    key: (
+                        None,
+                        value
+                    )
+                    for key, value
+                    in data.items()
+                },
 
-        print(
-            f"Response: "
-            f"{response.text}"
-        )
+                timeout=90
 
-        response.raise_for_status()
+            )
 
 
-    # ------------------------------------------
-    # READ CLOUDFLARE RESPONSE
-    # ------------------------------------------
+            # ------------------------------------------
+            # CHECK HTTP RESPONSE
+            # ------------------------------------------
 
-    response_data = response.json()
+            if not response.ok:
 
+                print(
+                    f"[Media Tool] "
+                    f"Cloudflare returned "
+                    f"status "
+                    f"{response.status_code}."
+                )
 
-    image_base64 = (
-        response_data
-        .get("result", {})
-        .get("image")
-    )
-
-
-    if not image_base64:
-
-        raise ValueError(
-            "Cloudflare response did not contain image data."
-        )
-
-
-    # ------------------------------------------
-    # DECODE BASE64 IMAGE
-    # ------------------------------------------
-
-    image_bytes = base64.b64decode(
-        image_base64
-    )
+                print(
+                    f"[Media Tool] "
+                    f"Response: "
+                    f"{response.text[:500]}"
+                )
 
 
-    # ------------------------------------------
-    # SAVE IMAGE
-    # ------------------------------------------
-
-    output_file = os.path.join(
-
-        OUTPUT_DIR,
-
-        f"scene_{scene_number:03d}.png"
-
-    )
+                response.raise_for_status()
 
 
-    with open(
-        output_file,
-        "wb"
-    ) as file:
+            # ------------------------------------------
+            # READ RESPONSE JSON
+            # ------------------------------------------
 
-        file.write(
-            image_bytes
-        )
-
-
-    print(
-        f"[Media Tool] "
-        f"Image saved to "
-        f"{output_file}"
-    )
+            response_data = (
+                response.json()
+            )
 
 
-    return output_file
+            image_base64 = (
+                response_data
+                .get("result", {})
+                .get("image")
+            )
+
+
+            if not image_base64:
+
+                raise ValueError(
+                    "Cloudflare response "
+                    "did not contain image data."
+                )
+
+
+            # ------------------------------------------
+            # DECODE IMAGE
+            # ------------------------------------------
+
+            image_bytes = (
+                base64.b64decode(
+                    image_base64
+                )
+            )
+
+
+            # ------------------------------------------
+            # SAVE IMAGE
+            # ------------------------------------------
+
+            with open(
+                output_file,
+                "wb"
+            ) as file:
+
+                file.write(
+                    image_bytes
+                )
+
+
+            print(
+                f"[Media Tool] "
+                f"Image saved to "
+                f"{output_file}"
+            )
+
+
+            return output_file
+
+
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException,
+            ValueError
+        ) as e:
+
+            print(
+                f"[Media Tool] "
+                f"Scene {scene_number} "
+                f"attempt {attempt}/"
+                f"{max_retries} failed."
+            )
+
+            print(
+                f"[Media Tool] "
+                f"Error: {e}"
+            )
+
+
+            if attempt == max_retries:
+
+                raise
+
+
+            wait_time = attempt * 5
+
+
+            print(
+                f"[Media Tool] "
+                f"Waiting {wait_time} "
+                f"seconds before retry..."
+            )
+
+
+            time.sleep(
+                wait_time
+            )

@@ -1,0 +1,60 @@
+{
+  "scenes": [
+    {
+      "scene_number": 1,
+      "narration": "Welcome to a world where robots are becoming an integral part of our daily lives. From fast food restaurants to homes, hospitals, and industries, robots are transforming the way we live and work. Let's dive into the latest developments in robotics that are changing the game.",
+      "visual": "A futuristic cityscape with robots moving around, with a subtle 'coming soon' effect",
+      "generation_prompt": "A futuristic cityscape with robots moving around, subtle 'coming soon' effect, 4K resolution, cinematic style",
+      "duration": 5,
+      "transition": "cut"
+    },
+    {
+      "scene_number": 2,
+      "narration": "One of the most significant advancements in robotics is the ability of robots to learn from virtual environments. With improvements in simulation, synthetic data, and AI-powered robot learning, robots can deploy to real-world settings faster than ever before.",
+      "visual": "Animation of robots learning from virtual environments",
+      "generation_prompt": "Animation of robots learning from virtual environments, futuristic robots, 3D animation, realistic lighting",
+      "duration": 8,
+      "transition": "cut"
+    },
+    {
+      "scene_number": 3,
+      "narration": "Meet the multi-tasking bot that can prepare a gourmet hamburger in just 10 seconds. This breakthrough in vision language action reasoning enables robots to understand natural language instructions and perform complex tasks.",
+      "visual": "Animation of robots preparing a gourmet hamburger",
+      "generation_prompt": "Animation of a robot preparing a gourmet hamburger, close-up of the burger, 3D animation, realistic lighting",
+      "duration": 10,
+      "transition": "cut"
+    },
+    {
+      "scene_number": 4,
+      "narration": "NVIDIA's Isaac GR00T and Cosmos world models are revolutionizing the way robots learn and interact with their environment. These models help systems learn more efficiently and generalize across environments, enabling robots to perform diverse tasks.",
+      "visual": "Animation of robots using NVIDIA Isaac GR00T and Cosmos models",
+      "generation_prompt": "Animation of robots using NVIDIA Isaac GR00T and Cosmos models, futuristic robots, 3D animation, realistic lighting",
+      "duration": 8,
+      "transition": "cut"
+    },
+    {
+      "scene_number": 5,
+      "narration": "The availability of Newton 1.0 and advanced simulation technologies is providing a fast and reliable foundation for dexterous robot manipulation. This is enabling robots to perform complex tasks with accurate collision detection and realistic object contact.",
+      "visual": "Animation of robots using Newton 1.0 and simulation technologies",
+      "generation_prompt": "Animation of robots using Newton 1.0 and simulation technologies, futuristic robots, 3D animation, realistic lighting",
+      "duration": 8,
+      "transition": "cut"
+    },
+    {
+      "scene_number": 6,
+      "narration": "These developments in robotics are transforming industries and revolutionizing the way we live. From fast food restaurants to therapeutic robots, robots are becoming an integral part of our lives.",
+      "visual": "Montage of robots in various settings",
+      "generation_prompt": "Montage of robots in various settings, futuristic cityscape, 4K resolution, cinematic style",
+      "duration": 12,
+      "transition": "cut"
+    },
+    {
+      "scene_number": 7,
+      "narration": "Don't miss out on the latest robotics updates. Subscribe to our channel and hit the notification bell to stay up-to-date on the latest developments in robotics.",
+      "visual": "End screen with a call-to-action to subscribe and watch more videos",
+      "generation_prompt": "End screen with a call-to-action to subscribe and watch more videos, futuristic background, 4K resolution, cinematic style",
+      "duration": 5,
+      "transition": "cut"
+    }
+  ]
+}

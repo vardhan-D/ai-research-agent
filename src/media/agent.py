@@ -14,14 +14,8 @@ class MediaAgent:
         scenes: list
     ):
 
-        # ------------------------------------------
-        # CREATE STATE
-        # ------------------------------------------
-
         self.state = MediaState(
-
             scenes=scenes
-
         )
 
 
@@ -30,10 +24,6 @@ class MediaAgent:
             "Generating images..."
         )
 
-
-        # ------------------------------------------
-        # GENERATE IMAGE FOR EACH SCENE
-        # ------------------------------------------
 
         for scene in scenes:
 
@@ -51,32 +41,31 @@ class MediaAgent:
 
                 print(
                     f"[Media Agent] "
-                    f"Skipping scene "
-                    f"{scene_number}: "
-                    f"no generation prompt."
+                    f"Scene {scene_number} "
+                    f"has no prompt. Skipping."
                 )
 
                 continue
 
 
+            print(
+                f"\n[Media Agent] "
+                f"Scene {scene_number}"
+            )
+
+
             try:
-
-                print(
-                    f"\n[Media Agent] "
-                    f"Scene {scene_number}"
-                )
-
 
                 image_path = generate_image(
 
                     prompt=generation_prompt,
 
-                    scene_number=scene_number
+                    scene_number=scene_number,
 
                 )
 
 
-                media_item = {
+                self.state.generated_media.append({
 
                     "scene_number":
                         scene_number,
@@ -87,12 +76,7 @@ class MediaAgent:
                     "generation_prompt":
                         generation_prompt,
 
-                }
-
-
-                self.state.generated_media.append(
-                    media_item
-                )
+                })
 
 
             except Exception as e:
@@ -100,15 +84,43 @@ class MediaAgent:
                 print(
                     f"[Media Agent] "
                     f"Scene {scene_number} "
-                    f"failed: {e}"
+                    f"FAILED."
                 )
+
+                print(
+                    f"[Media Agent] "
+                    f"Error: {e}"
+                )
+
+                print(
+                    "[Media Agent] "
+                    "Continuing to next scene..."
+                )
+
+
+        successful = len(
+            self.state.generated_media
+        )
+
+        failed = (
+            len(scenes)
+            - successful
+        )
 
 
         print(
             "\n[Media Agent] "
-            f"Finished generating "
-            f"{len(self.state.generated_media)} "
-            f"images."
+            "Media generation finished."
+        )
+
+        print(
+            f"[Media Agent] "
+            f"Successful: {successful}"
+        )
+
+        print(
+            f"[Media Agent] "
+            f"Failed: {failed}"
         )
 
 
